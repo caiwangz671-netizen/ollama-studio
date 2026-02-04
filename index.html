@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ollama Studio</title>
+    <link rel="stylesheet" href="./styles.css?v=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- 侧边栏 -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>Ollama Studio</h2>
+          <button id="newChatBtn" class="btn-icon" title="新对话">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <label>模型选择</label>
+          <div class="select-wrapper">
+            <select id="modelSelect">
+              <option value="" disabled selected>正在扫描...</option>
+            </select>
+            <button id="scanBtn" class="btn-icon-small" title="刷新模型列表">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 2v6h-6"></path>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                <path d="M3 22v-6h6"></path>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section flex-grow">
+          <label>历史对话</label>
+          <div class="search-box">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="chatSearchInput" class="search-input" placeholder="搜索历史记录...">
+          </div>
+          <div id="historyList" class="history-list">
+            <!-- 历史记录项由 JS 生成 -->
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <button id="dbBtn" class="btn-ghost" title="知识库管理" style="margin-bottom: 4px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            知识库
+          </button>
+          <button id="settingsBtn" class="btn-ghost">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            设置
+          </button>
+        </div>
+      </aside>
+
+      <!-- 主区域 -->
+      <main class="main-content">
+        <header class="top-bar">
+          <div class="current-model-info">
+            <span id="currentModelDisplay">选择一个模型开始对话</span>
+          </div>
+          <div class="status-indicator" id="statusIndicator">就绪</div>
+        </header>
+
+        <div id="chatArea" class="chat-area">
+          <div class="welcome-screen">
+            <h1>Ollama Studio</h1>
+            <p>选择模型并发送消息以开始对话</p>
+          </div>
+        </div>
+
+        <div class="input-area">
+          <!-- RAG Status Animation -->
+          <div id="ragStatusContainer" class="rag-status-container">
+             <div id="ragStatus" class="rag-status">
+                <div class="rag-spinner"></div>
+                <span id="ragStatusText">正在检测 RAG 模型...</span>
+             </div>
+          </div>
+
+          <div id="attachmentBar" class="attachment-bar hidden"></div>
+          <div class="input-wrapper">
+            <button id="attachBtn" class="btn-icon input-tool-btn" title="添加附件">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-8.49 8.49a5 5 0 0 1-7.07-7.07l8.49-8.49a3.5 3.5 0 0 1 4.95 4.95l-8.5 8.5a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+              </svg>
+            </button>
+            <button id="micBtn" class="btn-icon input-tool-btn" title="语音输入">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+            <textarea
+              id="inputBox"
+              placeholder="发送消息..."
+              rows="1"
+            ></textarea>
+            <button id="sendBtn" class="btn-primary" disabled>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+            <input id="fileInput" type="file" multiple accept="image/*,audio/*,.txt,.md,.json,.csv,.pdf" hidden />
+          </div>
+          <div class="input-footer">
+            <span class="tip">Enter 发送，Shift + Enter 换行</span>
+          </div>
+        </div>
+      </main>
+      <div id="vramEstimator" class="vram-estimator">
+        <div class="vram-title">显存估算<span class="vram-toggle" aria-hidden="true"></span></div>
+        <div class="vram-row"><span>模型</span><span id="vramModel">-</span></div>
+        <div class="vram-row"><span>参数规模</span><span id="vramParams">-</span></div>
+        <div class="vram-row"><span>量化</span><span id="vramQuant">-</span></div>
+        <div class="vram-row"><span>上下文长度</span><span id="vramCtx">-</span></div>
+        <div class="vram-row"><span>KV 每 token</span><span id="vramKvPerToken">-</span></div>
+        <div class="vram-row"><span>权重</span><span id="vramWeights">-</span></div>
+        <div class="vram-row"><span>KV Cache</span><span id="vramKv">-</span></div>
+        <div class="vram-row"><span>运行时开销</span><span id="vramOverhead">-</span></div>
+        <div class="vram-row"><span>安全余量</span><span id="vramSafety">-</span></div>
+        <div class="vram-total"><span>合计</span><span id="vramTotal">-</span></div>
+        <div class="vram-note">权重与 KV 基于模型名与上下文长度估算，包含运行时开销与安全余量</div>
+      </div>
+
+      <!-- 知识库模态框 -->
+      <div id="dbModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 900px; height: 85vh; display: flex; flex-direction: column;">
+          <div class="modal-header">
+            <h3>知识库管理</h3>
+            <button id="closeDbBtn" class="btn-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0;">
+            <!-- 统计信息栏 -->
+            <div class="db-stats" style="padding: 12px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; align-items: center;">
+              <div class="stat-item">
+                <span class="stat-label">总计：</span>
+                <span class="stat-value" id="totalMemories">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">已选中：</span>
+                <span class="stat-value" id="selectedMemories">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">显示：</span>
+                <span class="stat-value" id="displayedMemories">0</span>
+              </div>
+            </div>
+            
+            <!-- 工具栏 -->
+            <div class="db-toolbar" style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; flex-wrap: wrap;">
+              <!-- 搜索框 -->
+              <div class="search-box" style="flex: 1; min-width: 200px;">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="memorySearchInput" class="search-input" placeholder="搜索知识库...">
+              </div>
+              
+              <!-- 操作按钮 -->
+              <div style="display: flex; gap: 8px;">
+                <button id="addMemoryBtn" class="btn-primary" title="添加知识" style="padding: 6px 12px; font-size: 13px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  添加
+                </button>
+                <button id="exportDbBtn" class="btn-ghost" title="导出知识库">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </button>
+                <button id="clearAllDbBtn" class="btn-ghost" title="清空所有知识库" style="color: var(--danger-color);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+                <button id="batchDeleteBtn" class="btn-ghost" title="批量删除" style="color: var(--danger-color); display: none;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+                <button id="refreshDbBtn" class="btn-ghost" title="刷新列表">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2v6h-6"></path>
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                    <path d="M3 22v-6h6"></path>
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <!-- 批量操作栏 -->
+            <div id="batchActionBar" class="batch-action-bar" style="padding: 8px 16px; background: var(--accent-color); color: white; border-bottom: 1px solid var(--border-color); display: none; align-items: center; gap: 12px;">
+              <input type="checkbox" id="selectAllMemories" title="全选">
+              <span id="batchActionText">已选中 0 项</span>
+              <div style="flex: 1;"></div>
+              <button id="cancelBatchBtn" class="btn-ghost" style="color: white; padding: 4px 8px;">取消</button>
+            </div>
+            
+            <!-- 知识列表 -->
+            <div id="memoryList" style="flex: 1; overflow-y: auto; padding: 16px;">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设置模态框 -->
+      <div id="settingsModal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>设置</h3>
+            <button id="closeSettingsBtn" class="btn-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="general">常规设置</button>
+              <button class="tab-btn" data-tab="generation">生成参数</button>
+              <button class="tab-btn" data-tab="tools">知识库与工具</button>
+            </div>
+
+            <!-- General Tab -->
+            <div id="tab-general" class="tab-content active">
+              <div class="form-group">
+                <label>Ollama 服务地址</label>
+                <input
+                  type="text"
+                  id="endpointInput"
+                  value="http://127.0.0.1:11434"
+                  placeholder="例如 http://127.0.0.1:11434"
+                />
+                <span class="help-text">Ollama API 的基础 URL。</span>
+              </div>
+            </div>
+
+            <!-- Generation Tab -->
+            <div id="tab-generation" class="tab-content">
+              <div class="form-group">
+                <label>系统提示词 (System Prompt)</label>
+                <textarea
+                  id="systemPromptInput"
+                  rows="3"
+                  placeholder="为 AI 设定角色或行为准则..."
+                ></textarea>
+              </div>
+              
+              <div class="row">
+                <div class="form-group">
+                  <label>上下文长度 (Context Window)</label>
+                  <input type="number" id="numCtxInput" value="4096" step="1024" min="2048" />
+                  <span class="help-text">模型记忆的上下文长度 (num_ctx)。</span>
+                </div>
+                <div class="form-group">
+                  <label>最大输出 Token</label>
+                  <input type="number" id="maxTokensInput" value="2048" step="256" />
+                  <div class="preset-group" id="maxTokenPresets">
+                    <button type="button" class="preset-btn max-token-preset" data-value="512">512</button>
+                    <button type="button" class="preset-btn max-token-preset" data-value="1024">1024</button>
+                    <button type="button" class="preset-btn max-token-preset" data-value="2048">2048</button>
+                    <button type="button" class="preset-btn max-token-preset" data-value="4096">4096</button>
+                    <button type="button" class="preset-btn max-token-preset" data-value="8192">8192</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="form-group">
+                  <label>温度 (Temperature): <span id="tempValue">0.7</span></label>
+                  <input
+                    type="range"
+                    id="tempInput"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value="0.7"
+                  />
+                  <span class="help-text">较高的值会产生更有创意的回答。</span>
+                </div>
+                <div class="form-group">
+                  <label>Top P: <span id="topPValue">0.9</span></label>
+                  <input
+                    type="range"
+                    id="topPInput"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value="0.9"
+                  />
+                  <span class="help-text">控制词汇选择的多样性。</span>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="form-group">
+                  <label>重复惩罚 (Repeat Penalty): <span id="repeatPenaltyValue">1.1</span></label>
+                  <input
+                    type="range"
+                    id="repeatPenaltyInput"
+                    min="1.0"
+                    max="2.0"
+                    step="0.1"
+                    value="1.1"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>随机种子 (Seed)</label>
+                  <input type="number" id="seedInput" placeholder="随机 (默认)" />
+                  <span class="help-text">指定种子以复现结果，留空为随机。</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tools Tab -->
+            <div id="tab-tools" class="tab-content">
+              <div class="form-group">
+                <div class="toggle-switch">
+                  <label for="ragEnabledInput">启用 RAG (知识库检索)</label>
+                  <input type="checkbox" id="ragEnabledInput" class="toggle-input" checked />
+                </div>
+                <span class="help-text">允许 AI 自动检索并使用知识库中的长期记忆。</span>
+              </div>
+
+              <div class="row">
+                <div class="form-group">
+                  <label>RAG 相似度阈值: <span id="ragThresholdValue">0.35</span></label>
+                  <input
+                    type="range"
+                    id="ragThresholdInput"
+                    min="0.1"
+                    max="0.9"
+                    step="0.05"
+                    value="0.35"
+                  />
+                  <span class="help-text">只有相似度高于此值的记忆才会被引用。</span>
+                </div>
+                <div class="form-group">
+                  <label>最大引用数量: <span id="ragLimitValue">5</span></label>
+                  <input
+                    type="range"
+                    id="ragLimitInput"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value="5"
+                  />
+                </div>
+              </div>
+              
+              <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+              <div class="form-group">
+                <div class="toggle-switch">
+                  <label for="webSearchEnabledInput">启用 Web Search (联网搜索)</label>
+                  <input type="checkbox" id="webSearchEnabledInput" class="toggle-input" checked />
+                </div>
+                <span class="help-text">允许 AI 在需要时调用搜索引擎获取实时信息。</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="saveSettingsBtn" class="btn-primary">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="./app.js?v=1"></script>
+  </body>
+</html>
