@@ -873,6 +873,11 @@ select:focus {
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.input-wrapper.dragover {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .attachment-bar {
   max-width: 800px;
   margin: 0 auto 10px;
