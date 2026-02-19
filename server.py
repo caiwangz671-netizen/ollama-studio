@@ -2,7 +2,6 @@ import json
 import os
 import sqlite3
 import numpy as np
-import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.error import HTTPError, URLError
@@ -446,7 +445,7 @@ class OllamaHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.startswith("/api/models"):
+        if self.path == "/api/models":
             status, data, _ = fetch_ollama("/api/tags")
             if status >= 400:
                 self.send_bytes(status, "application/json", data)

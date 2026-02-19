@@ -2596,7 +2596,10 @@ async function streamResponse(payload, messageObj, domElement) {
               });
           }
           
-          if (json.done) return;
+          if (json.done) {
+            updateMessageContent(domElement, messageObj.content, false);
+            return;
+          }
         } catch (e) {
           // Partial JSON, ignore
         }
